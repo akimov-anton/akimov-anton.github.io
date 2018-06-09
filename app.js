@@ -215,7 +215,7 @@ let currentObject;
 
 let boxHeight = 400;
 
-let bodyCoords = { x: 500, y: __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */] - boxHeight - 100 };
+let bodyCoords = { x: 200, y: __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */] - boxHeight - 100 };
 
 let spaceBarKey;
 
@@ -266,7 +266,7 @@ function create() {
     });
 
     player2 = new __WEBPACK_IMPORTED_MODULE_5__player__["a" /* default */]({
-        x: bodyCoords.x + 700,
+        x: bodyCoords.x + 400,
         faceTo: 'left',
         boxHeight,
         boxWidth: 40
@@ -319,9 +319,13 @@ function create() {
         }
     });
 
+    // game.input.onTap.add(() => {
+    //    console.log('onTap');
+    // });
+
     game.input.onUp.add(() => {
 
-        if (!game.input.mousePointer.identifier) {
+        if (game.input.activePointer.isMouse && !game.input.mousePointer.identifier) {
             // check if mouse on canvas
             return false;
         }
