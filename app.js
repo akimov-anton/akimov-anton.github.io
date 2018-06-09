@@ -213,7 +213,7 @@ let objects = [{
 
 let currentObject;
 
-let boxHeight = 400;
+let boxHeight = 100;
 
 let bodyCoords = { x: 200, y: __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */] - boxHeight - 100 };
 
@@ -49553,7 +49553,11 @@ let Player = function (data) {
     for (let groupName in this.groups) {
         if (this.groups.hasOwnProperty(groupName)) {
             this.groups[groupName].children.map(children => {
-                children.body.setCategoryContactCallback(6, (selfBody, body2, fixture1, fixture2, begin) => {
+                children.body.setCategoryPresolveCallback(6, (selfBody, body2, fixture1, fixture2, begin) => {
+
+                    if (this.isDead) {
+                        return;
+                    }
 
                     if (selfBody.id === this.head.id || selfBody.id === this.body.id) {
                         setTimeout(() => {
@@ -49561,9 +49565,10 @@ let Player = function (data) {
                             selfBody.applyForce(500, 0);
 
                             setTimeout(() => {
+                                console.log('create new player');
                                 new Player({
                                     x: this.spawnPosition.x,
-                                    boxHeight: 400,
+                                    boxHeight: 100,
                                     boxWidth: 40
                                 });
                             }, 1000);
