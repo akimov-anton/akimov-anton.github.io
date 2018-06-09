@@ -49357,6 +49357,7 @@ let Player = function (data) {
     this.isManHasBullet = false;
     this.isSweeping = false;
     this.fireIsProcessing = false;
+    this.hitProcessing = false;
 
     this.spawnPosition = {
         x: data.x,
@@ -49555,11 +49556,12 @@ let Player = function (data) {
             this.groups[groupName].children.map(children => {
                 children.body.setCategoryPresolveCallback(6, (selfBody, body2, fixture1, fixture2, begin) => {
 
-                    if (this.isDead) {
+                    if (this.isDead || this.hitProcessing) {
                         return;
                     }
 
                     if (selfBody.id === this.head.id || selfBody.id === this.body.id) {
+                        this.isDead = true;
                         setTimeout(() => {
                             this.kill();
                             selfBody.applyForce(500, 0);
@@ -49573,6 +49575,10 @@ let Player = function (data) {
                                 });
                             }, 1000);
                         }, 0);
+                    } else {
+                        // setTimeout(() => {
+                        //     this.hitProcessing = false;
+                        // }, 1000);
                     }
                 });
             });
