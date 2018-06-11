@@ -259,6 +259,7 @@ function create() {
     // polygonBody.addPolygon([0, 0, 50, 0, 30, 40, 0, 40]);
 
     player1 = new __WEBPACK_IMPORTED_MODULE_5__player__["a" /* default */]({
+        isOpponent: false,
         x: bodyCoords.x,
         faceTo: 'right',
         boxHeight,
@@ -49359,6 +49360,8 @@ let Player = function (data) {
     this.fireIsProcessing = false;
     this.hitProcessing = false;
 
+    this.isOpponent = true;
+
     this.spawnPosition = {
         x: data.x,
         y: data.y ? data.y : __WEBPACK_IMPORTED_MODULE_2__constants__["d" /* GAME_HEIGHT */] - data.boxHeight - 100
@@ -49416,6 +49419,8 @@ let Player = function (data) {
 
     this.partsRGBA = 'rgba(0, 0, 0, 1)';
 
+    this.bodyPartsCollisionCategory = this.isOpponent ? 2 : 1;
+
     let bodyBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.bodyWidth, this.bodyHeight);
     let headBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.headRadius * 2, this.headRadius * 2);
     let shoulderBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.shoulderLength, this.shoulderWidth);
@@ -49458,8 +49463,8 @@ let Player = function (data) {
 
     this.groups.legsGroup.children.map(child => {
         // child.body.static = true;
-        child.body.setCollisionCategory(2);
-        child.body.setCollisionMask(4);
+        child.body.setCollisionCategory(this.bodyPartsCollisionCategory);
+        child.body.setCollisionMask(this.bodyPartsCollisionCategory * 2);
         child.body.collideWorldBounds = true;
         if (!this.gravity) {
             child.body.gravityScale = 0;
@@ -49467,8 +49472,8 @@ let Player = function (data) {
     });
 
     this.groups.handsGroup.children.map(child => {
-        child.body.setCollisionCategory(2);
-        child.body.setCollisionMask(4);
+        child.body.setCollisionCategory(this.bodyPartsCollisionCategory);
+        child.body.setCollisionMask(this.bodyPartsCollisionCategory * 2);
         child.body.collideWorldBounds = true;
         if (!this.gravity) {
             child.body.gravityScale = 0;
@@ -49476,8 +49481,8 @@ let Player = function (data) {
     });
 
     this.groups.bodyParts.children.map(child => {
-        child.body.setCollisionCategory(2);
-        child.body.setCollisionMask(4);
+        child.body.setCollisionCategory(this.bodyPartsCollisionCategory);
+        child.body.setCollisionMask(this.bodyPartsCollisionCategory * 2);
         child.body.collideWorldBounds = true;
         if (!this.gravity) {
             child.body.gravityScale = 0;
@@ -49500,10 +49505,11 @@ let Player = function (data) {
 
     __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.shoulderLeft, this.forearmLeft, -this.shoulderLength / 2, 0, this.forearmLength / 2, 0, 8, 3);
 
+    this.joints.forearmJoints = [];
     if (this.faceTo === 'right') {
-        __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(this.shoulderLeft, this.forearmLeft, -this.shoulderLength / 2, 0, this.forearmLength / 2, 0, 0, 0, false, 115, 115, true);
+        this.joints.forearmJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(this.shoulderLeft, this.forearmLeft, -this.shoulderLength / 2, 0, this.forearmLength / 2, 0, 0, 0, false, 115, 115, true));
     } else {
-        __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(this.shoulderRight, this.forearmRight, this.shoulderLength / 2, 0, -this.forearmLength / 2, 0, 0, 0, false, -115, -115, true);
+        this.joints.forearmJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(this.shoulderRight, this.forearmRight, this.shoulderLength / 2, 0, -this.forearmLength / 2, 0, 0, 0, false, -115, -115, true));
     }
 
     // legs joints
@@ -49554,19 +49560,41 @@ let Player = function (data) {
     for (let groupName in this.groups) {
         if (this.groups.hasOwnProperty(groupName)) {
             this.groups[groupName].children.map(children => {
-                children.body.setCategoryPresolveCallback(6, (selfBody, body2, fixture1, fixture2, begin) => {
+                children.body.setCategoryPresolveCallback(6, (selfBody, bullet, fixture1, fixture2, begin) => {
 
                     if (this.isDead || this.hitProcessing) {
                         return;
                     }
 
+                    this.hitProcessing = true;
+
+                    setTimeout(() => {
+                        bullet.gravityScale = 0;
+                        bullet.setZeroRotation();
+                        bullet.setZeroVelocity();
+                        bullet.setCollisionCategory(2);
+                        bullet.setCollisionMask(-1);
+                        this.joints.bulletJoint = __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(selfBody, bullet, 0, 0, 0, 0, 3, 0.5);
+                    }, 0);
+
                     if (selfBody.id === this.head.id || selfBody.id === this.body.id) {
+                        console.log('kill');
                         this.isDead = true;
                         setTimeout(() => {
+
                             this.kill();
-                            selfBody.applyForce(500, 0);
+                            selfBody.applyForce(700, 0);
 
                             setTimeout(() => {
+                                __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(this.joints.bulletJoint);
+
+                                this.hitProcessing = false;
+                                if (bullet.sprite) {
+                                    bullet.sprite.destroy();
+                                }
+                                bullet.kill();
+                                bullet.destroy();
+
                                 console.log('create new player');
                                 new Player({
                                     x: this.spawnPosition.x,
@@ -49576,9 +49604,14 @@ let Player = function (data) {
                             }, 1000);
                         }, 0);
                     } else {
-                        // setTimeout(() => {
-                        //     this.hitProcessing = false;
-                        // }, 1000);
+                        console.log('hit');
+                        setTimeout(() => {
+                            this.hitProcessing = false;
+                            if (bullet.sprite) {
+                                bullet.sprite.destroy();
+                            }
+                            bullet.destroy();
+                        }, 1000);
                     }
                 });
             });
@@ -49605,13 +49638,17 @@ Player.prototype.createSpear = function (x, y, jointBody, jointBodyAnchors, angl
     let spear = __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.sprite(x, y, bmd);
     spear.anchor.setTo(0.5, 0.5);
     __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.enable(spear, __WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
+    spear.body.collideWorldBounds = true;
     this.bulletMass = spear.body.mass;
     // spear.body.fixedRotation = true;
     // spear.body.gravityScale = 0;
     spear.body.mass = 0.001;
+    spear.body.bullet = true;
 
-    this.joints.spearJoints = [];
-    this.joints.spearJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(jointBody, spear.body, jointBodyAnchors.x, 0, 0, 0, 0, 0, false, angle, angle, true));
+    spear.body.setCollisionCategory(0);
+
+    this.joints.bulletJoints = [];
+    this.joints.bulletJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(jointBody, spear.body, jointBodyAnchors.x, 0, 0, 0, 0, 0, false, angle, angle, true));
 
     return spear;
 };
@@ -49629,17 +49666,18 @@ Player.prototype.pushBullet = function (dragX, dragY, bulletBody = this.bullet.b
         bulletBody.mass = this.bulletMass;
         this.fireIsProcessing = true;
 
-        this.joints.spearJoints.map(joint => {
+        this.joints.bulletJoints.map(joint => {
             __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(joint);
         });
 
         setTimeout(() => {
-            bulletBody.setCollisionCategory(6);
+            bulletBody.setCollisionCategory(this.bodyPartsCollisionCategory * 3);
+            // bulletBody.setCollisionMask(2);
         }, 300);
 
         bulletBody.applyForce(dragX, dragY);
         this.forearmLeft.applyForce(dragX + 300, dragY);
-    }, 500);
+    }, 200);
 
     if (bulletBody) {
 
@@ -49647,23 +49685,15 @@ Player.prototype.pushBullet = function (dragX, dragY, bulletBody = this.bullet.b
 
             this.fireIsProcessing = false;
 
-            setTimeout(() => {
-                if (!this.isManHasBullet) {
-                    this.bullet = this.createSpear(this.forearmLeft.x, this.forearmLeft.y, this.forearmLeft, { x: -this.forearmLength / 2, y: 0 });
-                    this.isManHasBullet = true;
-                }
-            }, 200);
-
             if ([0, 1, 2, 3].includes(body2.id)) {
                 // walls
                 body1.destroy();
             } else {
                 setTimeout(() => {
                     // if (!isBulletWelded) {
-                    body1.setZeroRotation();
-                    body1.setZeroVelocity();
-                    body1.setCollisionCategory(2);
-                    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(body2, body1, 0, 0, 0, 0, 3, 0.5);
+                    // body1.setZeroRotation();
+                    // body1.setZeroVelocity();
+                    // body1.setCollisionCategory(2);
                     // body1.destroy();
                     // body1.kill();
                     // player2.kill();
@@ -49684,6 +49714,13 @@ Player.prototype.pushBullet = function (dragX, dragY, bulletBody = this.bullet.b
             }
         });
     }
+
+    setTimeout(() => {
+        if (!this.isManHasBullet) {
+            this.bullet = this.createSpear(this.forearmLeft.x, this.forearmLeft.y, this.forearmLeft, { x: -this.forearmLength / 2, y: 0 });
+            this.isManHasBullet = true;
+        }
+    }, 2000);
 };
 
 Player.prototype.createBox = function (x, y, width, height) {
@@ -49724,11 +49761,20 @@ Player.prototype.destroyBodyAnchor = function () {
     this.bodyAnchor = null;
 };
 
-Player.prototype.destroyBoxJoints = function () {
-    this.joints.boxJoints.map(joint => {
-        __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(joint);
-    });
+Player.prototype.destroyJointsByName = function (name) {
+    if (this.joints[name]) {
+        this.joints[name].map(joint => {
+            __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(joint);
+        });
+    }
 };
+
+// Player.prototype.destroyBoxJoints = function () {
+//     this.joints.boxJoints.map(joint => {
+//         game.physics.box2d.world.DestroyJoint(joint);
+//     });
+// };
+
 
 Player.prototype.setGravity = function (isGravityOn) {
     this.gravity = isGravityOn;
@@ -49756,7 +49802,7 @@ Player.prototype.destroyParts = function () {
     for (let groupName in this.groups) {
         if (this.groups.hasOwnProperty(groupName)) {
             this.groups[groupName].children.map(children => {
-                children.body.destroy();
+                children.destroy();
             });
         }
     }
@@ -49764,7 +49810,11 @@ Player.prototype.destroyParts = function () {
 
 Player.prototype.kill = function () {
     this.isDead = true;
-    this.destroyBoxJoints();
+    this.destroyJointsByName('boxJoints');
+    this.destroyJointsByName('forearmJoints');
+    setTimeout(() => {
+        this.destroyJointsByName('bulletJoints');
+    }, 500);
     // this.setCollisionMask(2);
     this.setGravity(true);
     setTimeout(() => {
