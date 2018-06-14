@@ -69,6 +69,7 @@
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hitPoint", function() { return hitPoint; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_expose_loader_PIXI_phaser_ce_build_custom_pixi_js__ = __webpack_require__(4);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_expose_loader_PIXI_phaser_ce_build_custom_pixi_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_expose_loader_PIXI_phaser_ce_build_custom_pixi_js__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_expose_loader_p2_phaser_ce_build_custom_p2_js__ = __webpack_require__(6);
@@ -195,7 +196,7 @@ let objects = [{
             } else {
                 let prevCoordX = this.coords[this.coords.length - 2];
                 let prevCoordY = this.coords[this.coords.length - 1];
-                if (Math.abs(Math.abs(prevCoordX) - Math.abs(data.x)) > __WEBPACK_IMPORTED_MODULE_3__constants__["f" /* MIN_STEP_FOR_FREE_LINE */] || Math.abs(Math.abs(prevCoordY) - Math.abs(data.y)) > __WEBPACK_IMPORTED_MODULE_3__constants__["f" /* MIN_STEP_FOR_FREE_LINE */]) {
+                if (Math.abs(Math.abs(prevCoordX) - Math.abs(data.x)) > __WEBPACK_IMPORTED_MODULE_3__constants__["g" /* MIN_STEP_FOR_FREE_LINE */] || Math.abs(Math.abs(prevCoordY) - Math.abs(data.y)) > __WEBPACK_IMPORTED_MODULE_3__constants__["g" /* MIN_STEP_FOR_FREE_LINE */]) {
                     this.coords.push(data.x);
                     this.coords.push(data.y);
                     this.tempBody.addChain(this.coords);
@@ -227,6 +228,10 @@ let lineDirection = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_
 let player1;
 let player2;
 
+let forbiddenAngle = false;
+
+let hitPoint = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Point(0, 0);
+
 function create() {
     let mouseDown;
     let mousePositionsArray = [];
@@ -240,7 +245,7 @@ function create() {
     // game.physics.box2d.ptmRatio = 500;
     game.physics.box2d.gravity.y = 1000; // large gravity to make scene feel smaller
     // game.physics.arcade.gravity.y = 1000;
-    // game.physics.box2d.friction = 1;
+    game.physics.box2d.friction = 1;
     // game.physics.box2d.restitution = 0;
 
 
@@ -292,6 +297,10 @@ function create() {
 
         if (downX && downY) {
             lineDirection.setTo(downX, downY, event.x, event.y);
+
+            let angle = __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Math.radToDeg(game.physics.arcade.angleToPointer({ x: downX, y: downY }));
+
+            forbiddenAngle = 90 > angle || angle > 180;
         }
 
         return;
@@ -334,11 +343,13 @@ function create() {
         dragX = downX - game.input.x;
         dragY = downY - game.input.y;
 
-        player1.pushBullet(dragX, dragY);
+        if (!forbiddenAngle && player1.isHasBullet) {
+            player1.pushBullet(dragX, dragY);
+        }
 
         downX = 0;
         downY = 0;
-        // lineDirection.setTo(0, 0, 0, 0);
+        lineDirection.setTo(0, 0, 0, 0);
 
         return;
 
@@ -408,7 +419,7 @@ function update() {
         }
     }
 
-    if (downX && downX) {
+    if (downX && downX && player1.isHasBullet && player1.bodyAnchor) {
         let rotation = game.physics.arcade.angleToPointer({ x: downX, y: downY });
         let angle = __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Math.radToDeg(rotation);
         let percentOfAngle;
@@ -444,7 +455,7 @@ function update() {
         }
     }
 
-    if (player1.isSweeping) {
+    if (player1.isSweeping && player1.bodyAnchor) {
 
         player1.bodyAnchor.moveLeft(1000);
 
@@ -467,8 +478,13 @@ function render() {
     // game.debug.box2dWorld();
 
     // game.debug.body(box);
+    if (forbiddenAngle) {
+        game.debug.geom(lineDirection, 'rgba(255,0,0,1)');
+    } else {
+        game.debug.geom(lineDirection);
+    }
 
-    game.debug.geom(lineDirection);
+    // game.debug.geom( hitPoint, 'rgba(255,255,255,1)' ) ;
 
     game.physics.box2d.debugDraw.shapes = true;
     game.physics.box2d.debugDraw.joints = true;
@@ -478,6 +494,7 @@ function render() {
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (game);
+
 
 /***/ }),
 /* 1 */
@@ -522,7 +539,8 @@ module.exports = g;
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return FOOTER_PADDING; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return FOOTER_CELL_WIDTH; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return FOOTER_POSITION_Y; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return MIN_STEP_FOR_FREE_LINE; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return MIN_STEP_FOR_FREE_LINE; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return MAX_PUSH_BULLET_FORCE; });
 const GAME_WIDTH = window.innerWidth;
 const GAME_HEIGHT = window.innerHeight;
 
@@ -532,6 +550,9 @@ const FOOTER_CELL_WIDTH = 80;
 const FOOTER_POSITION_Y = GAME_HEIGHT - FOOTER_HEIGHT;
 
 const MIN_STEP_FOR_FREE_LINE = 20;
+
+const MAX_PUSH_BULLET_FORCE = 100;
+const MAX_PUSH_BULLET_ANGLE = 90;
 
 
 
@@ -49355,7 +49376,7 @@ function getObjectByCoords(objects, x, y) {
 let Player = function (data) {
 
     this.isDead = false;
-    this.isManHasBullet = false;
+    this.isHasBullet = false;
     this.isSweeping = false;
     this.fireIsProcessing = false;
     this.hitProcessing = false;
@@ -49378,14 +49399,14 @@ let Player = function (data) {
     this.bodyWidth = 20;
     this.bodyHeight = 40;
 
-    // hands
+    // hands params
 
     this.shoulderLength = 20;
     this.forearmLength = 20;
     this.shoulderWidth = 7;
     this.forearmWidth = 5;
 
-    // legs
+    // legs params
 
     this.hipLength = 30;
     this.hipWidth = 10;
@@ -49393,11 +49414,18 @@ let Player = function (data) {
     this.shinLength = 20;
     this.shinWidth = 8;
 
+    // hands
+
+    this.hands = [];
     this.shoulders = null;
     this.shoulderLeft = null;
     this.shoulderRight = null;
     this.forearmRight = null;
     this.forearmLeft = null;
+
+    // legs
+
+    this.legs = [];
     this.hipLeft = null;
     this.hipRight = null;
     this.shinLeft = null;
@@ -49412,7 +49440,8 @@ let Player = function (data) {
     this.groups = {
         bodyParts: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
         handsGroup: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
-        legsGroup: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D)
+        legsGroup: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
+        blood: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D)
     };
 
     this.joints = {};
@@ -49427,6 +49456,7 @@ let Player = function (data) {
     let shouldersBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.bodyWidth + this.shoulderWidth * 2, this.shoulderWidth);
     let forearmBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.forearmLength, this.forearmWidth);
     let hipBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.hipWidth, this.hipLength);
+    // let hip2Bmd = game.make.bitmapData(this.hipWidth, this.hipLength);
     let shinBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.shinWidth, this.shinLength);
     bodyBmd.rect(0, 0, this.bodyWidth, this.bodyHeight, this.partsRGBA);
     headBmd.circle(this.headRadius, this.headRadius, this.headRadius, this.partsRGBA);
@@ -49435,6 +49465,7 @@ let Player = function (data) {
     shouldersBmd.circle(this.bodyWidth + this.shoulderWidth, this.shoulderWidth / 2, this.shoulderWidth / 2, this.partsRGBA);
     forearmBmd.rect(0, 0, this.forearmLength, this.forearmWidth, this.partsRGBA);
     hipBmd.rect(0, 0, this.hipWidth, this.hipLength, this.partsRGBA);
+    // hip2Bmd.rect(0, 0, this.hipWidth, this.hipLength, 'rgba(255,0,0,1)');
     shinBmd.rect(0, 0, this.shinWidth, this.shinLength, this.partsRGBA);
     let bodySprite = this.groups.bodyParts.create(this.spawnPosition.x, this.spawnPosition.y, bodyBmd);
     let headSprite = this.groups.bodyParts.create(this.spawnPosition.x, this.spawnPosition.y, headBmd);
@@ -49460,6 +49491,10 @@ let Player = function (data) {
     this.hipRight = hipRightSprite.body;
     this.shinLeft = shinLeftSprite.body;
     this.shinRight = shinRightSprite.body;
+
+    this.legs.push(this.hipLeft, this.hipRight, this.shinLeft, this.shinRight);
+
+    this.hands.push(this.shoulders, this.shoulderLeft, this.shoulderRight, this.forearmRight, this.forearmLeft);
 
     this.groups.legsGroup.children.map(child => {
         // child.body.static = true;
@@ -49489,21 +49524,23 @@ let Player = function (data) {
         }
     });
 
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.head, 0, -this.bodyHeight / 2, 0, this.headRadius, 5, 4);
+    this.joints.headJoints = [];
+    this.joints.headJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.head, 0, -this.bodyHeight / 2, 0, this.headRadius, 5, 4));
     __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.shoulders, 0, -this.bodyHeight / 2 + this.shoulderWidth / 2, 0, 0, 40, 0.5);
 
     // hands joints
 
+    this.joints.handJoints = [];
     // game.physics.box2d.revoluteJoint(body, shoulder1, bodyWidth/2+3, -bodyHeight/2+5, -shoulderLength/2, 0, 0, 0, false, -90, 90, true);
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.shoulderRight, this.bodyWidth / 2, -this.bodyHeight / 2 + this.shoulderWidth / 2, -this.shoulderLength / 2, 0, 8, 3);
+    this.joints.handJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.shoulderRight, this.bodyWidth / 2, -this.bodyHeight / 2 + this.shoulderWidth / 2, -this.shoulderLength / 2, 0, 8, 3));
 
     // game.physics.box2d.revoluteJoint(body, shoulder2, -15, -bodyHeight/2, shoulderLength/2, 0, 10, 0, false, -90, 90, true);
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.shoulderLeft, -this.bodyWidth / 2, -this.bodyHeight / 2 + this.shoulderWidth / 2, this.shoulderLength / 2, 0, 8, 3);
+    this.joints.handJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.shoulderLeft, -this.bodyWidth / 2, -this.bodyHeight / 2 + this.shoulderWidth / 2, this.shoulderLength / 2, 0, 8, 3));
 
     // game.physics.box2d.revoluteJoint(shoulder1, forearm1, shoulderLength/2, 0, forearmLength/2, 0, 0, 0, false, -360, 360, true);
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.shoulderRight, this.forearmRight, this.shoulderLength / 2, 0, -this.forearmLength / 2, 0, 8, 3);
+    this.joints.handJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.shoulderRight, this.forearmRight, this.shoulderLength / 2, 0, -this.forearmLength / 2, 0, 8, 3));
 
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.shoulderLeft, this.forearmLeft, -this.shoulderLength / 2, 0, this.forearmLength / 2, 0, 8, 3);
+    this.joints.handJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.shoulderLeft, this.forearmLeft, -this.shoulderLength / 2, 0, this.forearmLength / 2, 0, 8, 3));
 
     this.joints.forearmJoints = [];
     if (this.faceTo === 'right') {
@@ -49514,17 +49551,19 @@ let Player = function (data) {
 
     // legs joints
 
+    this.joints.legJoints = [];
+
     // game.physics.box2d.revoluteJoint(body, hip1, -hipWidth/2, bodyHeight/2, 0, -hipLength/2, 0, 0, false, -360, 360, true);
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.hipLeft, -this.hipWidth / 2 - 2, this.bodyHeight / 2, 0, -this.hipLength / 2, 1, 0.5);
+    this.joints.legJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.hipLeft, -this.hipWidth / 2 - 2, this.bodyHeight / 2, 0, -this.hipLength / 2, 1, 0.5));
     //
     // game.physics.box2d.revoluteJoint(body, hip2, hipWidth/2, bodyHeight/2, 0, -hipLength/2, 0, 0, false, -360, 360, true);
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.hipRight, this.hipWidth / 2 + 2, this.bodyHeight / 2, 0, -this.hipLength / 2, 1, 0);
+    this.joints.legJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.body, this.hipRight, this.hipWidth / 2 + 2, this.bodyHeight / 2, 0, -this.hipLength / 2, 1, 0));
 
     // game.physics.box2d.revoluteJoint(hip1, shin1, 0, hipLength/2, 0, -hipLength/2, 0, 0, false, -360, 360, true);
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.hipLeft, this.shinLeft, 0, this.shinLength / 2, 0, -this.hipLength / 2, 3, 0.5);
+    this.joints.legJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.hipLeft, this.shinLeft, 0, this.shinLength / 2, 0, -this.hipLength / 2, 3, 0.5));
 
     // game.physics.box2d.revoluteJoint(hip2, shin2, 0, hipLength/2, 0, -hipLength/2, 0, 0, false, -360, 360, true);
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.hipRight, this.shinRight, 0, this.shinLength / 2, 0, -this.hipLength / 2, 3, 0.5);
+    this.joints.legJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(this.hipRight, this.shinRight, 0, this.shinLength / 2, 0, -this.hipLength / 2, 3, 0.5));
 
     this.joints.boxJoints = [];
 
@@ -49541,7 +49580,7 @@ let Player = function (data) {
         // create bullet
 
         this.bullet = this.createSpear(this.forearmLeft.x, this.forearmLeft.y, this.forearmLeft, { x: -this.forearmLength / 2, y: 0 });
-        this.isManHasBullet = true;
+        this.isHasBullet = true;
     } else {
         bodyRevoluteJoint = __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(this.box, this.body, 0, -this.boxHeight / 2 - (this.hipLength + this.shinLength / 2 + 12), 0, this.bodyHeight / 2, 5, 50, false, -30, 30, true);
         this.joints.bodyRevoluteJoint = bodyRevoluteJoint;
@@ -49554,7 +49593,7 @@ let Player = function (data) {
         // create bullet
 
         this.bullet = this.createSpear(this.forearmRight.x, this.forearmRight.y, this.forearmRight, { x: this.forearmLength / 2, y: 0 }, 120);
-        this.isManHasBullet = true;
+        this.isHasBullet = true;
     }
 
     for (let groupName in this.groups) {
@@ -49572,28 +49611,44 @@ let Player = function (data) {
                         bullet.gravityScale = 0;
                         bullet.setZeroRotation();
                         bullet.setZeroVelocity();
-                        bullet.setCollisionCategory(2);
-                        bullet.setCollisionMask(-1);
-                        this.joints.bulletJoint = __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(selfBody, bullet, 0, 0, 0, 0, 3, 0.5);
+                        bullet.setCollisionCategory(1);
+                        bullet.setCollisionMask(1);
+
+                        __WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].set(bullet.x, bullet.y);
+
+                        let hitLine = new __WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Line();
+                        hitLine.fromAngle(bullet.x, bullet.y, bullet.rotation, bullet.sprite.width / 2);
+
+                        __WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].set(hitLine.end.x, hitLine.end.y);
+
+                        let out = {};
+
+                        selfBody.toLocalPoint(out, __WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"]);
+
+                        this.joints.hitJoints = [];
+                        this.joints.hitJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(selfBody, bullet, out.x, out.y, bullet.sprite.width / 5, 0, 3, 0.5));
+
+                        this.createBlood(__WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].x, __WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].y);
+
+                        // bullet.kill();
                     }, 0);
 
                     if (selfBody.id === this.head.id || selfBody.id === this.body.id) {
                         console.log('kill');
-                        this.isDead = true;
                         setTimeout(() => {
 
+                            selfBody.applyForce(500, 0);
                             this.kill();
-                            selfBody.applyForce(700, 0);
 
                             setTimeout(() => {
-                                __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(this.joints.bulletJoint);
+                                // game.physics.box2d.world.DestroyJoint(this.joints.bulletJoint);
 
                                 this.hitProcessing = false;
                                 if (bullet.sprite) {
                                     bullet.sprite.destroy();
                                 }
-                                bullet.kill();
-                                bullet.destroy();
+                                // bullet.kill();
+                                // bullet.destroy();
 
                                 console.log('create new player');
                                 new Player({
@@ -49639,6 +49694,7 @@ Player.prototype.createSpear = function (x, y, jointBody, jointBodyAnchors, angl
     spear.anchor.setTo(0.5, 0.5);
     __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.enable(spear, __WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
     spear.body.collideWorldBounds = true;
+    spear.body.outOfBoundsKill = true;
     this.bulletMass = spear.body.mass;
     // spear.body.fixedRotation = true;
     // spear.body.gravityScale = 0;
@@ -49651,76 +49707,6 @@ Player.prototype.createSpear = function (x, y, jointBody, jointBodyAnchors, angl
     this.joints.bulletJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.revoluteJoint(jointBody, spear.body, jointBodyAnchors.x, 0, 0, 0, 0, 0, false, angle, angle, true));
 
     return spear;
-};
-
-Player.prototype.pushBullet = function (dragX, dragY, bulletBody = this.bullet.body) {
-    this.isManHasBullet = false;
-
-    this.isSweeping = true;
-
-    setTimeout(() => {
-        this.isSweeping = false;
-
-        this.destroyBodyAnchor();
-
-        bulletBody.mass = this.bulletMass;
-        this.fireIsProcessing = true;
-
-        this.joints.bulletJoints.map(joint => {
-            __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(joint);
-        });
-
-        setTimeout(() => {
-            bulletBody.setCollisionCategory(this.bodyPartsCollisionCategory * 3);
-            // bulletBody.setCollisionMask(2);
-        }, 300);
-
-        bulletBody.applyForce(dragX, dragY);
-        this.forearmLeft.applyForce(dragX + 300, dragY);
-    }, 200);
-
-    if (bulletBody) {
-
-        bulletBody.setCategoryContactCallback(6, (body1, body2, fixture1, fixture2, begin) => {
-
-            this.fireIsProcessing = false;
-
-            if ([0, 1, 2, 3].includes(body2.id)) {
-                // walls
-                body1.destroy();
-            } else {
-                setTimeout(() => {
-                    // if (!isBulletWelded) {
-                    // body1.setZeroRotation();
-                    // body1.setZeroVelocity();
-                    // body1.setCollisionCategory(2);
-                    // body1.destroy();
-                    // body1.kill();
-                    // player2.kill();
-                    // body2.applyForce(dragX + 200, dragY);
-
-                    // setTimeout(() => {
-                    //     body1.destroy();
-                    //     if (player2.isDead) {
-                    //         player2 = new Player({
-                    //             x: bodyCoords.x + 700,
-                    //             boxHeight,
-                    //             boxWidth: 40
-                    //         });
-                    //     }
-                    // }, 1000);
-                    // }
-                }, 0);
-            }
-        });
-    }
-
-    setTimeout(() => {
-        if (!this.isManHasBullet) {
-            this.bullet = this.createSpear(this.forearmLeft.x, this.forearmLeft.y, this.forearmLeft, { x: -this.forearmLength / 2, y: 0 });
-            this.isManHasBullet = true;
-        }
-    }, 2000);
 };
 
 Player.prototype.createBox = function (x, y, width, height) {
@@ -49755,10 +49741,49 @@ Player.prototype.createBodyAnchor = function () {
     this.joints.bodyAnchorJoint = __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.pulleyJoint(this.bodyAnchor, this.body, 0, 0, 0, -20, this.body.x - 100, this.body.y, this.body.x - 100, this.body.y, 1, 50);
 };
 
+Player.prototype.createBlood = function (x, y) {
+
+    // let bloodSize = 2;
+    // let bmd = game.make.bitmapData(bloodSize * 2, bloodSize * 2);
+    // bmd.circle(bloodSize, bloodSize, bloodSize, 'rgba(255,0,0,1)');
+
+    let bloodSizes = [1, 2];
+    let bmds = [];
+
+    for (let i in bloodSizes) {
+        let bloodSize = bloodSizes[i];
+        let bmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(bloodSize * 2, bloodSize * 2);
+        bmds.push(bmd);
+        bmd.circle(bloodSize, bloodSize, bloodSize, 'rgba(255,0,0,1)');
+    }
+
+    this.groups.blood = __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
+
+    for (let i = 0; i < 40; i++) {
+        let blood = this.groups.blood.create(x + i / 2, y, bmds[__WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(0, 1)]);
+
+        blood.body.collideWorldBounds = false;
+        blood.body.outOfBoundsKill = true;
+        blood.body.setCollisionCategory(this.bodyPartsCollisionCategory);
+        // blood.body.setCollisionMask(4);
+
+        let forceX = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 2);
+        let forceY = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 3);
+
+        blood.body.applyForce(-forceX, -forceY);
+
+        setTimeout(() => {
+            blood.destroy();
+        }, 3000);
+    }
+};
+
 Player.prototype.destroyBodyAnchor = function () {
-    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(this.joints.bodyAnchorJoint);
-    this.bodyAnchor.destroy();
-    this.bodyAnchor = null;
+    if (this.bodyAnchor) {
+        __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(this.joints.bodyAnchorJoint);
+        this.bodyAnchor.destroy();
+        this.bodyAnchor = null;
+    }
 };
 
 Player.prototype.destroyJointsByName = function (name) {
@@ -49769,12 +49794,85 @@ Player.prototype.destroyJointsByName = function (name) {
     }
 };
 
-// Player.prototype.destroyBoxJoints = function () {
-//     this.joints.boxJoints.map(joint => {
-//         game.physics.box2d.world.DestroyJoint(joint);
-//     });
-// };
+Player.prototype.destroyParts = function () {
+    for (let groupName in this.groups) {
 
+        if (this.groups.hasOwnProperty(groupName)) {
+            this.groups[groupName].children.map(children => {
+                children.body.kill();
+                children.kill();
+                children.destroy();
+            });
+            this.groups[groupName].destroy();
+        }
+    }
+};
+
+Player.prototype.destroyAllJoints = function () {
+    for (let jointName in this.joints) {
+
+        if (this.joints.hasOwnProperty(jointName)) {
+            if (Array.isArray(this.joints[jointName])) {
+                this.joints[jointName].map(joint => {
+                    __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(joint);
+                });
+            }
+        }
+    }
+};
+
+Player.prototype.pushBullet = function (dragX, dragY, bulletBody = this.bullet.body) {
+    this.isHasBullet = false;
+
+    this.isSweeping = true;
+
+    setTimeout(() => {
+        this.isSweeping = false;
+
+        this.destroyBodyAnchor();
+
+        bulletBody.mass = this.bulletMass;
+        this.fireIsProcessing = true;
+
+        this.joints.bulletJoints.map(joint => {
+            __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.world.DestroyJoint(joint);
+        });
+
+        setTimeout(() => {
+            bulletBody.setCollisionCategory(this.bodyPartsCollisionCategory * 3);
+            // bulletBody.setCollisionMask(2);
+        }, 300);
+
+        if (dragX > __WEBPACK_IMPORTED_MODULE_2__constants__["f" /* MAX_PUSH_BULLET_FORCE */]) {
+            dragX = __WEBPACK_IMPORTED_MODULE_2__constants__["f" /* MAX_PUSH_BULLET_FORCE */];
+        }
+        if (dragY > __WEBPACK_IMPORTED_MODULE_2__constants__["f" /* MAX_PUSH_BULLET_FORCE */]) {
+            dragY = __WEBPACK_IMPORTED_MODULE_2__constants__["f" /* MAX_PUSH_BULLET_FORCE */];
+        }
+        bulletBody.applyForce(dragX, dragY);
+        this.forearmLeft.applyForce(dragX + 300, dragY);
+    }, 200);
+
+    if (bulletBody) {
+
+        bulletBody.setCategoryContactCallback(6, (body1, body2, fixture1, fixture2, begin) => {
+
+            this.fireIsProcessing = false;
+
+            if ([0, 1, 2, 3].includes(body2.id)) {
+                // walls
+                body1.destroy();
+            }
+        });
+    }
+
+    setTimeout(() => {
+        if (!this.isHasBullet) {
+            this.bullet = this.createSpear(this.forearmLeft.x, this.forearmLeft.y, this.forearmLeft, { x: -this.forearmLength / 2, y: 0 });
+            this.isHasBullet = true;
+        }
+    }, 1000);
+};
 
 Player.prototype.setGravity = function (isGravityOn) {
     this.gravity = isGravityOn;
@@ -49798,28 +49896,24 @@ Player.prototype.setCollisionMask = function (mask) {
     }
 };
 
-Player.prototype.destroyParts = function () {
-    for (let groupName in this.groups) {
-        if (this.groups.hasOwnProperty(groupName)) {
-            this.groups[groupName].children.map(children => {
-                children.destroy();
-            });
-        }
-    }
-};
-
 Player.prototype.kill = function () {
+    console.log('destroy ', this.groups);
+
     this.isDead = true;
     this.destroyJointsByName('boxJoints');
     this.destroyJointsByName('forearmJoints');
+
     setTimeout(() => {
         this.destroyJointsByName('bulletJoints');
     }, 500);
     // this.setCollisionMask(2);
     this.setGravity(true);
+
     setTimeout(() => {
+        this.destroyJointsByName('hitJoints');
+        this.destroyAllJoints();
         this.destroyParts();
-    }, 2000);
+    }, 1000);
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (Player);
