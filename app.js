@@ -49771,10 +49771,6 @@ Player.prototype.createBlood = function (x, y) {
         let forceY = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 3);
 
         blood.body.applyForce(-forceX, -forceY);
-
-        setTimeout(() => {
-            blood.destroy();
-        }, 3000);
     }
 };
 
