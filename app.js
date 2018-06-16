@@ -89,7 +89,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-var game = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Game(__WEBPACK_IMPORTED_MODULE_3__constants__["e" /* GAME_WIDTH */], __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */], __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.CANVAS, 'phaser-example', { create, update, render });
+var game = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Game(__WEBPACK_IMPORTED_MODULE_3__constants__["e" /* GAME_WIDTH */], __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */], __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.CANVAS);
 
 const MODES = {
     EDGE: 'EDGE',
@@ -97,401 +97,243 @@ const MODES = {
     POLYGON: 'POLYGON'
 };
 
-let objects = [{
-    type: 'circle',
-    footerSettings: {
-        offset: {
-            x: 40,
-            y: 40
-        }
-    },
-    radius: 20,
-    render(data) {
-        let { radius, x, y } = data;
-        if (!radius) {
-            radius = this.radius;
-        }
-
-        game.physics.box2d.friction = 5;
-        // game.physics.box2d.density = 10;
-        let tempCircleBody = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.Box2D.Body(game, null, x, y);
-        tempCircleBody.density = 100;
-        tempCircleBody.bullet = true;
-        tempCircleBody.addCircle(radius, 0, 0);
-        return tempCircleBody;
-    }
-}, {
-    type: 'polygon',
-    footerSettings: {
-        offset: {
-            x: 20,
-            y: 20
-        },
-        coords: [0, 0, 50, 0, 30, 40, 0, 40]
-    },
-    render(data) {
-        let { x, y } = data;
-
-        // game.physics.box2d.restitution = 0.1;
-        let tempPolygon = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.Box2D.Body(game, null, x, y, 2);
-        // tempPolygon.friction = 10;
-        // tempPolygon.density = 1000;
-        tempPolygon.restitution = 0;
-        // tempPolygon.linearDamping = 10;
-        tempPolygon.addPolygon(this.footerSettings.coords);
-    }
-}, {
-    type: 'polygon',
-    footerSettings: {
-        offset: {
-            x: 20,
-            y: 20
-        },
-        coords: [0, 0, 50, 0, 50, 40, 0, 40]
-    },
-    render(data) {
-        let { x, y } = data;
-
-        game.physics.box2d.restitution = 0;
-        let tempPolygon = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.Box2D.Body(game, null, x, y, 2);
-        // tempPolygon.friction = 5;
-        tempPolygon.density = 1;
-        // tempPolygon.addPolygon(this.footerSettings.coords);
-        tempPolygon.addPolygon([0, 0, 200, 0, 200, 5, 0, 5]);
-    }
-}, {
-    type: 'edge',
-    footerSettings: {
-        offset: {
-            x: 0,
-            y: 20
-        },
-        coords: [30, 0, 50, 40]
-    },
-    render(data) {
-        let { body, x1, y1, x2, y2 } = data;
-        if (!body) {
-            body = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.Box2D.Body(game, null, 0, 0, 2);
-        }
-        body.addEdge(x1, y1, x2, y2);
-    }
-}, {
-    type: 'free-line',
-    footerSettings: {
-        offset: {
-            x: 20,
-            y: 20
-        },
-        coords: [0, 0, 5, 7, 10, 7, 11, 15, 17, 25, 34, 42]
-    },
-    coords: [],
-    tempBody: null,
-    render(data) {
-        if (data.start) {
-            if (!this.coords.length) {
-                this.tempBody = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.Box2D.Body(game, null, 0, 0, 2);
-                this.tempBody.static = true;
-                this.coords.push(data.x);
-                this.coords.push(data.y);
-            } else {
-                let prevCoordX = this.coords[this.coords.length - 2];
-                let prevCoordY = this.coords[this.coords.length - 1];
-                if (Math.abs(Math.abs(prevCoordX) - Math.abs(data.x)) > __WEBPACK_IMPORTED_MODULE_3__constants__["g" /* MIN_STEP_FOR_FREE_LINE */] || Math.abs(Math.abs(prevCoordY) - Math.abs(data.y)) > __WEBPACK_IMPORTED_MODULE_3__constants__["g" /* MIN_STEP_FOR_FREE_LINE */]) {
-                    this.coords.push(data.x);
-                    this.coords.push(data.y);
-                    this.tempBody.addChain(this.coords);
-                } else {}
-            }
-        } else {
-            // if (this.tempBody) {
-            //     this.tempBody.static = false;
-            // }
-            this.coords = [];
-            this.tempBody = null;
-        }
-    }
-}];
-
-let currentObject;
-
 let boxHeight = 100;
 
 let bodyCoords = { x: 200, y: __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */] - boxHeight - 100 };
-
-let spaceBarKey;
 
 let downY, dragX;
 let downX, dragY;
 
 let lineDirection = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Line(0, 0, 0, 0);
 
-let player1;
-let player2;
-
 let forbiddenAngle = false;
 
 let hitPoint = new __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Point(0, 0);
 
-function create() {
-    let mouseDown;
-    let mousePositionsArray = [];
+window.onload = function () {
 
-    game.stage.backgroundColor = '#124184';
-    // game.stage.backgroundColor = '#fff';
+    game.state.add("PlayGame", playGame);
+    game.state.start("PlayGame");
+};
 
-    // Enable Box2D physics
-    game.physics.startSystem(__WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
-    game.physics.box2d.setBounds(0, 0, __WEBPACK_IMPORTED_MODULE_3__constants__["e" /* GAME_WIDTH */], __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */], true, true, true, true, 1);
-    // game.physics.box2d.ptmRatio = 500;
-    game.physics.box2d.gravity.y = 1000; // large gravity to make scene feel smaller
-    // game.physics.arcade.gravity.y = 1000;
-    game.physics.box2d.friction = 1;
-    // game.physics.box2d.restitution = 0;
+let playGame = function () {};
 
+playGame.prototype = {
+    preload() {},
+    create() {
 
-    // Make the ground body
-    // let mainBody = new Phaser.Physics.Box2D.Body(game, null, 0, 0, 0);
-    // mainBody.friction = 1;
-    // mainBody.static = true;
-    // mainBody.setCollisionCategory(1);
+        this.groups = {};
+        let mouseDown;
 
-    // let footerBody = Footer.createFooter(objects);
-    // let circleBody = new Phaser.Physics.Box2D.Body(game, null, FOOTER_PADDING + 20, FOOTER_POSITION_Y + 20 + FOOTER_PADDING, 0);
-    // let polygonBody = new Phaser.Physics.Box2D.Body(game, null, FOOTER_PADDING + 60, FOOTER_POSITION_Y + FOOTER_PADDING, 0);
-    // mainBody.addEdge(FOOTER_PADDING + 120, FOOTER_POSITION_Y + FOOTER_PADDING + 40, FOOTER_PADDING + 140, FOOTER_POSITION_Y + FOOTER_PADDING);
-    //
-    // circleBody.addCircle(20, 0, 0);
-    // polygonBody.addPolygon([0, 0, 50, 0, 30, 40, 0, 40]);
+        game.stage.backgroundColor = '#124184';
+        // game.stage.backgroundColor = '#fff';
 
-    player1 = new __WEBPACK_IMPORTED_MODULE_5__player__["a" /* default */]({
-        isOpponent: false,
-        x: bodyCoords.x,
-        faceTo: 'right',
-        boxHeight,
-        boxWidth: 40
-    });
+        // Enable Box2D physics
+        game.physics.startSystem(__WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
+        game.physics.box2d.setBounds(0, 0, __WEBPACK_IMPORTED_MODULE_3__constants__["e" /* GAME_WIDTH */], __WEBPACK_IMPORTED_MODULE_3__constants__["d" /* GAME_HEIGHT */], true, true, true, true, 1);
+        // game.physics.box2d.ptmRatio = 500;
+        game.physics.box2d.gravity.y = 1000; // large gravity to make scene feel smaller
+        // game.physics.arcade.gravity.y = 1000;
+        game.physics.box2d.friction = 1;
+        // game.physics.box2d.restitution = 0;
 
-    player2 = new __WEBPACK_IMPORTED_MODULE_5__player__["a" /* default */]({
-        x: bodyCoords.x + 400,
-        faceTo: 'left',
-        boxHeight,
-        boxWidth: 40
-    });
+        this.player1 = new __WEBPACK_IMPORTED_MODULE_5__player__["a" /* default */]({
+            isOpponent: false,
+            x: bodyCoords.x,
+            faceTo: 'right',
+            boxHeight,
+            boxWidth: 40
+        });
 
-    // Set up handlers for mouse events
-    game.input.onDown.add(mouseDragStart, this);
-    game.input.addMoveCallback(mouseDragMove, this);
-    game.input.onUp.add(mouseDragEnd, this);
+        this.player2 = new __WEBPACK_IMPORTED_MODULE_5__player__["a" /* default */]({
+            x: bodyCoords.x + 400,
+            faceTo: 'left',
+            boxHeight,
+            boxWidth: 40
+        });
 
-    function mouseDragStart() {
-        game.physics.box2d.mouseDragStart(game.input.mousePointer);
-    }
-    function mouseDragMove() {
-        game.physics.box2d.mouseDragMove(game.input.mousePointer);
-    }
-    function mouseDragEnd() {
-        game.physics.box2d.mouseDragEnd();
-    }
+        // Set up handlers for mouse events
+        game.input.onDown.add(mouseDragStart, this);
+        game.input.addMoveCallback(mouseDragMove, this);
+        game.input.onUp.add(mouseDragEnd, this);
 
-    game.input.addMoveCallback(event => {
-
-        if (downX && downY) {
-            lineDirection.setTo(downX, downY, event.x, event.y);
-
-            let angle = __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Math.radToDeg(game.physics.arcade.angleToPointer({ x: downX, y: downY }));
-
-            forbiddenAngle = 90 > angle || angle > 180;
+        function mouseDragStart() {
+            game.physics.box2d.mouseDragStart(game.input.mousePointer);
+        }
+        function mouseDragMove() {
+            game.physics.box2d.mouseDragMove(game.input.mousePointer);
+        }
+        function mouseDragEnd() {
+            game.physics.box2d.mouseDragEnd();
         }
 
-        return;
+        game.input.addMoveCallback(event => {
 
-        if (mouseDown && currentObject && currentObject.type === 'free-line') {
-            objects[4].render({
-                start: true,
-                x: event.x,
-                y: event.y
-            });
-        } else {
-            objects[4].render({
-                start: false
-            });
+            if (downX && downY) {
+                lineDirection.setTo(downX, downY, event.x, event.y);
+
+                let angle = __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Math.radToDeg(game.physics.arcade.angleToPointer({ x: downX, y: downY }));
+
+                forbiddenAngle = 90 > angle || angle > 180;
+            }
+        });
+
+        game.input.onDown.add(e => {
+            downX = game.input.x;
+            downY = game.input.y;
+
+            mouseDown = Object.assign({}, game.input.mousePointer.positionDown);
+
+            if (!this.player1.bodyAnchor) {
+                this.player1.createBodyAnchor();
+            }
+        });
+
+        game.input.onUp.add(() => {
+
+            if (game.input.activePointer.isMouse && !game.input.mousePointer.identifier) {
+                // check if mouse on canvas
+                return false;
+            }
+
+            dragX = downX - game.input.x;
+            dragY = downY - game.input.y;
+
+            if (!forbiddenAngle && this.player1.isHasBullet) {
+                this.player1.pushBullet(dragX, dragY);
+            }
+
+            downX = 0;
+            downY = 0;
+            lineDirection.setTo(0, 0, 0, 0);
+        });
+
+        // spaceBarKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+        this.initBlood();
+    },
+    update() {
+
+        if (this.player1.bullet && this.player1.bullet.body && this.player1.fireIsProcessing) {
+            let rotation = Math.atan2(this.player1.bullet.body.velocity.y, this.player1.bullet.body.velocity.x);
+            if (!isNaN(rotation) && this.player1.bullet.body.velocity.y !== 0 && this.player1.bullet.body.velocity.x !== 0) {
+                this.player1.bullet.body.rotation = rotation;
+            }
         }
-    });
 
-    game.input.onDown.add(e => {
-        downX = game.input.x;
-        downY = game.input.y;
+        if (downX && downX && this.player1.isHasBullet && this.player1.bodyAnchor) {
+            let rotation = game.physics.arcade.angleToPointer({ x: downX, y: downY });
+            let angle = __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Math.radToDeg(rotation);
+            let percentOfAngle;
+            let percentOfAngleBody;
+            let currentBodyAngle = parseInt(this.player1.joints.bodyRevoluteJoint.m_bodyB.parent.angle);
+            percentOfAngleBody = parseInt(Math.abs(currentBodyAngle / 30 * 100));
+            if (angle > 0) {
+                percentOfAngle = parseInt((180 - angle) / 90 * 100);
 
-        mouseDown = Object.assign({}, game.input.mousePointer.positionDown);
-
-        if (!player1.bodyAnchor) {
-            player1.createBodyAnchor();
-        }
-    });
-
-    // game.input.onTap.add(() => {
-    //    console.log('onTap');
-    // });
-
-    game.input.onUp.add(() => {
-
-        if (game.input.activePointer.isMouse && !game.input.mousePointer.identifier) {
-            // check if mouse on canvas
-            return false;
-        }
-
-        dragX = downX - game.input.x;
-        dragY = downY - game.input.y;
-
-        if (!forbiddenAngle && player1.isHasBullet) {
-            player1.pushBullet(dragX, dragY);
-        }
-
-        downX = 0;
-        downY = 0;
-        lineDirection.setTo(0, 0, 0, 0);
-
-        return;
-
-        let positionDown = game.input.mousePointer.positionDown;
-        let positionUp = game.input.mousePointer.positionUp;
-        let position = game.input.mousePointer.position;
-        // console.log(positionDown.x, positionUp.x, game.input.mousePointer.x, game.input.mousePointer.position.x);
-        // console.log(positionDown.x, game.input.mousePointer.position.x);
-        // console.log(game.input.mousePointer);
-        if (game.input.mousePointer.identifier) {
-            mouseDown = null;
-
-            if (footerBody && footerBody.containsPoint(game.input.mousePointer)) {
-
-                currentObject = __WEBPACK_IMPORTED_MODULE_4__footer__["a" /* getObjectByCoords */](objects, positionDown.x);
-                if (currentObject) {} else {
-                    console.log('empty footer object');
+                if (percentOfAngleBody === percentOfAngle || Math.abs(percentOfAngleBody - percentOfAngle) < 3) {
+                    return;
+                }
+                if (currentBodyAngle > 0 || Math.abs(percentOfAngleBody) < percentOfAngle) {
+                    this.player1.bodyAnchor.moveLeft(300);
+                } else {
+                    if (Math.abs(percentOfAngleBody) > percentOfAngle) {
+                        this.player1.bodyAnchor.moveRight(300);
+                    }
                 }
             } else {
+                percentOfAngle = (180 - Math.abs(angle)) / 90 * 100;
+                if (percentOfAngleBody === percentOfAngle || Math.abs(percentOfAngleBody - percentOfAngle) < 3) {
+                    return;
+                }
 
-                if (currentObject) {
-                    if (currentObject.render) {
-                        switch (currentObject.type) {
-                            case 'circle':
-                                currentObject.render({ x: positionDown.x, y: positionDown.y });
-                                break;
-                            case 'polygon':
-                                currentObject.render({ x: positionDown.x, y: positionDown.y });
-                                break;
-                            case 'edge':
-                                currentObject.render({
-                                    // body: mainBody,
-                                    x1: positionDown.x,
-                                    y1: positionDown.y,
-                                    x2: position.x,
-                                    y2: position.y
-                                });
-                                break;
-                        }
+                if (currentBodyAngle < 0 || Math.abs(percentOfAngleBody) < percentOfAngle) {
+                    this.player1.bodyAnchor.moveRight(300);
+                } else {
+                    if (Math.abs(percentOfAngleBody) > percentOfAngle) {
+                        this.player1.bodyAnchor.moveLeft(300);
                     }
                 }
             }
         }
 
-        // if (footerBody.containsPoint(game.input.mousePointer) || footerBody.containsPoint(mousePointerDown)) {
-        //     return;
-        // }
+        if (this.player1.isSweeping && this.player1.bodyAnchor) {
 
-    });
+            this.player1.bodyAnchor.moveLeft(1000);
 
-    spaceBarKey = game.input.keyboard.addKey(__WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Keyboard.SPACEBAR);
-}
+            // setTimeout(() => {
 
-function update() {
 
-    // game.paused = true;
-
-    // if (spaceBarKey.isDown) {
-    // body.static = false;
-    // resetMan();
-    // }
-
-    if (player1.bullet && player1.bullet.body && player1.fireIsProcessing) {
-        let rotation = Math.atan2(player1.bullet.body.velocity.y, player1.bullet.body.velocity.x);
-        if (!isNaN(rotation) && player1.bullet.body.velocity.y !== 0 && player1.bullet.body.velocity.x !== 0) {
-            player1.bullet.body.rotation = rotation;
+            // let currentBodyAngle = parseInt(joints.bodyRevoluteJoint.m_bodyB.parent.angle);
+            // if (currentBodyAngle > 0) {
+            //     console.log('currentBodyAngle', currentBodyAngle);
+            //     console.log('moveLeft');
+            //     bodyAnchor.moveLeft(300);
+            // }
+            // }, 200);
         }
-    }
+    },
+    render() {
 
-    if (downX && downX && player1.isHasBullet && player1.bodyAnchor) {
-        let rotation = game.physics.arcade.angleToPointer({ x: downX, y: downY });
-        let angle = __WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Math.radToDeg(rotation);
-        let percentOfAngle;
-        let percentOfAngleBody;
-        let currentBodyAngle = parseInt(player1.joints.bodyRevoluteJoint.m_bodyB.parent.angle);
-        percentOfAngleBody = parseInt(Math.abs(currentBodyAngle / 30 * 100));
-        if (angle > 0) {
-            percentOfAngle = parseInt((180 - angle) / 90 * 100);
+        // game.debug.box2dWorld();
 
-            if (percentOfAngleBody === percentOfAngle || Math.abs(percentOfAngleBody - percentOfAngle) < 3) {
-                return;
-            }
-            if (currentBodyAngle > 0 || Math.abs(percentOfAngleBody) < percentOfAngle) {
-                player1.bodyAnchor.moveLeft(300);
-            } else {
-                if (Math.abs(percentOfAngleBody) > percentOfAngle) {
-                    player1.bodyAnchor.moveRight(300);
-                }
-            }
+        // game.debug.body(box);
+        if (forbiddenAngle) {
+            game.debug.geom(lineDirection, 'rgba(255,0,0,1)');
         } else {
-            percentOfAngle = (180 - Math.abs(angle)) / 90 * 100;
-            if (percentOfAngleBody === percentOfAngle || Math.abs(percentOfAngleBody - percentOfAngle) < 3) {
-                return;
-            }
-
-            if (currentBodyAngle < 0 || Math.abs(percentOfAngleBody) < percentOfAngle) {
-                player1.bodyAnchor.moveRight(300);
-            } else {
-                if (Math.abs(percentOfAngleBody) > percentOfAngle) {
-                    player1.bodyAnchor.moveLeft(300);
-                }
-            }
+            game.debug.geom(lineDirection);
         }
+
+        // game.debug.geom( hitPoint, 'rgba(255,255,255,1)' ) ;
+
+        game.physics.box2d.debugDraw.shapes = true;
+        game.physics.box2d.debugDraw.joints = true;
+        // game.physics.box2d.debugDraw.aabbs = true;
+        game.physics.box2d.debugDraw.pairs = true;
+        // game.physics.box2d.debugDraw.centerOfMass = true;
+    },
+
+    initBlood() {
+        let bloodSizes = [1, 2];
+        let bmds = [];
+
+        for (let i in bloodSizes) {
+            let bloodSize = bloodSizes[i];
+            let bmd = game.make.bitmapData(bloodSize * 2, bloodSize * 2);
+            bmds.push(bmd);
+            bmd.circle(bloodSize, bloodSize, bloodSize, 'rgba(255,0,0,1)');
+        }
+
+        this.groups.blood = game.add.physicsGroup(__WEBPACK_IMPORTED_MODULE_2_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
+
+        for (let i = 0; i < 40; i++) {
+            let blood = this.groups.blood.create(this.player1.spawnPosition.x, this.player1.spawnPosition.y, bmds[game.rnd.integerInRange(0, 1)]);
+
+            blood.body.collideWorldBounds = false;
+            blood.body.checkWorldBounds = true;
+            blood.body.outOfBoundsKill = true;
+            blood.body.setCollisionCategory(this.player1.bodyPartsCollisionCategory);
+            // blood.body.setCollisionMask(4);
+            blood.kill();
+        }
+    },
+    createBlood(x, y) {
+        // this.initBlood();
+
+        this.groups.blood.children.map((child, index) => {
+
+            child.body.setZeroVelocity();
+            child.revive();
+            child.body.reset(x - index / 4, y + index / 3);
+            child.body.dynamic = true;
+
+            let forceX = game.rnd.integerInRange(1, 2);
+            let forceY = game.rnd.integerInRange(1, 2);
+            //
+            child.body.applyForce(-forceX, -forceY);
+        });
     }
-
-    if (player1.isSweeping && player1.bodyAnchor) {
-
-        player1.bodyAnchor.moveLeft(1000);
-
-        // setTimeout(() => {
-
-
-        // let currentBodyAngle = parseInt(joints.bodyRevoluteJoint.m_bodyB.parent.angle);
-        // if (currentBodyAngle > 0) {
-        //     console.log('currentBodyAngle', currentBodyAngle);
-        //     console.log('moveLeft');
-        //     bodyAnchor.moveLeft(300);
-        // }
-        // }, 200);
-
-    }
-}
-
-function render() {
-
-    // game.debug.box2dWorld();
-
-    // game.debug.body(box);
-    if (forbiddenAngle) {
-        game.debug.geom(lineDirection, 'rgba(255,0,0,1)');
-    } else {
-        game.debug.geom(lineDirection);
-    }
-
-    // game.debug.geom( hitPoint, 'rgba(255,255,255,1)' ) ;
-
-    game.physics.box2d.debugDraw.shapes = true;
-    game.physics.box2d.debugDraw.joints = true;
-    // game.physics.box2d.debugDraw.aabbs = true;
-    game.physics.box2d.debugDraw.pairs = true;
-    // game.physics.box2d.debugDraw.centerOfMass = true;
-}
+};
 
 /* harmony default export */ __webpack_exports__["default"] = (game);
 
@@ -539,7 +381,7 @@ module.exports = g;
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return FOOTER_PADDING; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return FOOTER_CELL_WIDTH; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return FOOTER_POSITION_Y; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "g", function() { return MIN_STEP_FOR_FREE_LINE; });
+/* unused harmony export MIN_STEP_FOR_FREE_LINE */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "f", function() { return MAX_PUSH_BULLET_FORCE; });
 const GAME_WIDTH = window.innerWidth;
 const GAME_HEIGHT = window.innerHeight;
@@ -49311,7 +49153,7 @@ process.umask = function () {
 
 "use strict";
 /* unused harmony export createFooter */
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getObjectByCoords; });
+/* unused harmony export getObjectByCoords */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__main__ = __webpack_require__(0);
@@ -49374,7 +49216,6 @@ function getObjectByCoords(objects, x, y) {
 
 
 let Player = function (data) {
-
     this.isDead = false;
     this.isHasBullet = false;
     this.isSweeping = false;
@@ -49442,13 +49283,8 @@ let Player = function (data) {
     this.groups = {
         bodyParts: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
         handsGroup: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
-        legsGroup: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
-        blood: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D)
+        legsGroup: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D)
     };
-
-    // this.groups.blood.collideWorldBounds = false;
-    // this.groups.blood.outOfBoundsKill = true;
-    // this.groups.blood.setCollisionCategory(this.bodyPartsCollisionCategory);
 
     this.joints = {};
 
@@ -49632,7 +49468,7 @@ let Player = function (data) {
                         this.joints.hitJoints = [];
                         this.joints.hitJoints.push(__WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.weldJoint(selfBody, bullet, out.x, out.y, bullet.sprite.width / 5, 0, 3, 0.5));
 
-                        this.createBlood(__WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].x, __WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].y);
+                        __WEBPACK_IMPORTED_MODULE_0__main__["default"].state.getCurrentState().createBlood(__WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].x, __WEBPACK_IMPORTED_MODULE_0__main__["hitPoint"].y);
 
                         // bullet.kill();
                     }, 0);
@@ -49676,8 +49512,6 @@ let Player = function (data) {
             });
         }
     }
-
-    this.initBlood();
 
     // friction joints
 
@@ -49745,47 +49579,6 @@ Player.prototype.createBodyAnchor = function () {
     this.bodyAnchor.fixedRotation = true;
 
     this.joints.bodyAnchorJoint = __WEBPACK_IMPORTED_MODULE_0__main__["default"].physics.box2d.pulleyJoint(this.bodyAnchor, this.body, 0, 0, 0, -20, this.body.x - 100, this.body.y, this.body.x - 100, this.body.y, 1, 50);
-};
-
-Player.prototype.createBlood = function (x, y) {
-
-    this.groups.blood.children.map((child, index) => {
-
-        child.body.setZeroVelocity();
-        child.revive();
-        child.body.reset(x - index / 4, y + index / 3);
-        child.body.dynamic = true;
-
-        let forceX = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 2);
-        let forceY = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 2);
-        //
-        child.body.applyForce(-forceX, -forceY);
-    });
-};
-
-Player.prototype.initBlood = function () {
-    let bloodSizes = [1, 2];
-    let bmds = [];
-
-    for (let i in bloodSizes) {
-        let bloodSize = bloodSizes[i];
-        let bmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(bloodSize * 2, bloodSize * 2);
-        bmds.push(bmd);
-        bmd.circle(bloodSize, bloodSize, bloodSize, 'rgba(255,0,0,1)');
-    }
-
-    this.groups.blood = __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
-
-    for (let i = 0; i < 40; i++) {
-        let blood = this.groups.blood.create(this.spawnPosition.x, this.spawnPosition.y, bmds[__WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(0, 1)]);
-
-        blood.body.collideWorldBounds = false;
-        blood.body.checkWorldBounds = true;
-        blood.body.outOfBoundsKill = true;
-        blood.body.setCollisionCategory(this.bodyPartsCollisionCategory);
-        // blood.body.setCollisionMask(4);
-        blood.kill();
-    }
 };
 
 Player.prototype.destroyBodyAnchor = function () {
