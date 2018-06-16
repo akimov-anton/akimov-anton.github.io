@@ -49437,6 +49437,8 @@ let Player = function (data) {
     this.bullet = null;
     this.bulletMass = null;
 
+    this.bodyPartsCollisionCategory = this.isOpponent ? 2 : 1;
+
     this.groups = {
         bodyParts: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
         handsGroup: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D),
@@ -49444,11 +49446,13 @@ let Player = function (data) {
         blood: __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D)
     };
 
+    // this.groups.blood.collideWorldBounds = false;
+    // this.groups.blood.outOfBoundsKill = true;
+    // this.groups.blood.setCollisionCategory(this.bodyPartsCollisionCategory);
+
     this.joints = {};
 
     this.partsRGBA = 'rgba(0, 0, 0, 1)';
-
-    this.bodyPartsCollisionCategory = this.isOpponent ? 2 : 1;
 
     let bodyBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.bodyWidth, this.bodyHeight);
     let headBmd = __WEBPACK_IMPORTED_MODULE_0__main__["default"].make.bitmapData(this.headRadius * 2, this.headRadius * 2);
@@ -49673,6 +49677,8 @@ let Player = function (data) {
         }
     }
 
+    this.initBlood();
+
     // friction joints
 
     // game.physics.box2d.frictionJoint(body, shoulder1, 20, 0, 0, 0, 0, 10);
@@ -49743,10 +49749,21 @@ Player.prototype.createBodyAnchor = function () {
 
 Player.prototype.createBlood = function (x, y) {
 
-    // let bloodSize = 2;
-    // let bmd = game.make.bitmapData(bloodSize * 2, bloodSize * 2);
-    // bmd.circle(bloodSize, bloodSize, bloodSize, 'rgba(255,0,0,1)');
+    this.groups.blood.children.map((child, index) => {
 
+        child.body.setZeroVelocity();
+        child.revive();
+        child.body.reset(x - index / 4, y + index / 3);
+        child.body.dynamic = true;
+
+        let forceX = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 2);
+        let forceY = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 2);
+        //
+        child.body.applyForce(-forceX, -forceY);
+    });
+};
+
+Player.prototype.initBlood = function () {
     let bloodSizes = [1, 2];
     let bmds = [];
 
@@ -49760,17 +49777,14 @@ Player.prototype.createBlood = function (x, y) {
     this.groups.blood = __WEBPACK_IMPORTED_MODULE_0__main__["default"].add.physicsGroup(__WEBPACK_IMPORTED_MODULE_1_expose_loader_Phaser_phaser_ce_build_custom_phaser_split_js___default.a.Physics.BOX2D);
 
     for (let i = 0; i < 40; i++) {
-        let blood = this.groups.blood.create(x + i / 2, y, bmds[__WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(0, 1)]);
+        let blood = this.groups.blood.create(this.spawnPosition.x, this.spawnPosition.y, bmds[__WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(0, 1)]);
 
         blood.body.collideWorldBounds = false;
+        blood.body.checkWorldBounds = true;
         blood.body.outOfBoundsKill = true;
         blood.body.setCollisionCategory(this.bodyPartsCollisionCategory);
         // blood.body.setCollisionMask(4);
-
-        let forceX = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 2);
-        let forceY = __WEBPACK_IMPORTED_MODULE_0__main__["default"].rnd.integerInRange(1, 3);
-
-        blood.body.applyForce(-forceX, -forceY);
+        blood.kill();
     }
 };
 
