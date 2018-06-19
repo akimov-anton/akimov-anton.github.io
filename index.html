@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Tower builder</title>
     
-    <script type="text/javascript" src="app.js?58f1f044f2a36fefde1c"></script>
+    <script type="text/javascript" src="app.js?11f0cfe7ca083f03468a"></script>
     
     <script type="text/javascript" src="./box2d-plugin-full.js"></script>
     <script type="text/javascript" src="./box2d.js"></script>
@@ -12,10 +12,22 @@
         body {
             margin: 0;
         }
+        .settings {
+            position: absolute;
+            color: white;
+            top: 50px;
+        }
     </style>
 </head>
 <body>
-<div id="app"></div>
+
+<div id="app">
+    <div class="settings">
+        <label for="blood-checkbox">Включить кровь</label>
+        <input id="blood-checkbox" type="checkbox">
+    </div>
+
+</div>
 
 </body>
 </html>
