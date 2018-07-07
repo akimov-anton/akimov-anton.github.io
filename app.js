@@ -141,6 +141,7 @@ window.onload = function () {
 
     document.getElementById('blood-count').addEventListener('change', function (el) {
         SETTINGS.BLOOD.COUNT = el.target.value;
+        game.state.getCurrentState().initBlood();
     });
 };
 
@@ -248,7 +249,7 @@ playGame.prototype = {
 
         // spaceBarKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
-        // this.initBlood();
+        this.initBlood();
     },
     update: function update() {
 
@@ -344,6 +345,10 @@ playGame.prototype = {
     },
     initBlood: function initBlood() {
         console.log('initBlood');
+        if (this.groups.blood && this.groups.blood.children.length) {
+            this.groups.blood.destroy();
+        }
+
         var bloodSizes = [1, 2];
         var bmds = [];
 
@@ -366,19 +371,26 @@ playGame.prototype = {
             // blood.body.setCollisionMask(4);
             blood.kill();
         }
+
+        // this.groups.blood.children[0].body.setCategoryContactCallback(this.player1.bodyPartsCollisionCategory, (body1, body2, fixture1, fixture2, begin) => {
+        //    console.log('BLOOD CONTACT!!');
+        // });
     },
     createBlood: function createBlood(x, y) {
 
-        // if (!this.groups.blood) {
-        this.initBlood();
-        // }
+        if (!this.groups.blood) {
+            this.initBlood();
+        }
 
         this.groups.blood.children.map(function (child, index) {
-
             child.body.setZeroVelocity();
+            child.body.setZeroRotation();
+            console.log(child.body.velocity.x, child.body.velocity.y);
             child.revive();
-            child.body.reset(x - index / 4, y + index / 3);
+            // child.body.reset(x-index/4, y+index/3);
+            child.body.reset(x, y);
             child.body.dynamic = true;
+            // child.body.setCollisionCategory(this.player1.bodyPartsCollisionCategory);
 
             var forceX = game.rnd.integerInRange(1, 2);
             var forceY = game.rnd.integerInRange(1, 2);
@@ -49257,6 +49269,7 @@ var Player = function Player(data) {
     this.bulletLength = 120;
 
     this.bullets = [];
+    this.bulletIds = [];
 
     this.hitPoint = new _phaserSplit2.default.Point(0, 0);
 
@@ -49473,9 +49486,9 @@ Player.prototype.createHitReactions = function () {
                     return;
                 }
                 children.body.setCategoryPresolveCallback(6, function (selfBody, bullet, fixture1, fixture2, begin) {
-                    console.log('CategoryPresolveCallback');
+                    // console.log('CategoryPresolveCallback');
 
-                    if (_this2.isDead || _this2.hitProcessing) {
+                    if (_this2.isDead || _this2.hitProcessing || _this2.isMyBullet(bullet)) {
                         return;
                     }
 
@@ -49511,7 +49524,6 @@ Player.prototype.createHitReactions = function () {
 
                         selfBody.toLocalPoint(bodyLocalHitPoint, _this2.hitPoint);
                         bullet.toLocalPoint(bulletLocalHitPoint, _this2.hitPoint);
-                        console.log(bulletLocalHitPoint);
 
                         _this2.joints.hitJoints = [];
                         _this2.joints.hitJoints.push(_main2.default.physics.box2d.weldJoint(selfBody, bullet, bodyLocalHitPoint.x, bodyLocalHitPoint.y, _this2.bulletLength / 5, 0, 3, 0.5));
@@ -49581,8 +49593,10 @@ Player.prototype.createBullet = function (isOpponent) {
         bulletObj = this.createSpear(this.forearmLeft.x, this.forearmLeft.y, this.forearmLeft, { x: -this.forearmLength / 2, y: 0 });
     }
 
+    this.bulletIds.push(bulletObj.bullet.body.id);
+
     bulletObj.bullet.body.setCategoryContactCallback(6, function (body1, body2, fixture1, fixture2, begin) {
-        console.log('setCategoryContactCallback');
+        // console.log('setCategoryContactCallback');
 
         // this.fireIsProcessing = false;
 
@@ -49592,9 +49606,6 @@ Player.prototype.createBullet = function (isOpponent) {
             // this.destroyBulletByHeadBody(body1);
             body1.destroy();
         } else {
-            // if (body2.bullet) {
-            //     console.log('BULLET!!');
-            // }
             var index = _this3.findBulletIndexByHead(body1);
             _this3.bullets.splice(index, 1);
         }
@@ -49767,13 +49778,32 @@ Player.prototype.destroyAllJoints = function () {
     }
 };
 
-Player.prototype.findBulletObjByHead = function (bulletHeadBody) {
-    this.bullets.map(function (bulletObj, index) {
-        if (bulletObj.head.body === bulletHeadBody) {
-            return bulletObj;
+Player.prototype.isMyBodyPart = function (body) {
+    var result = false;
+    for (var groupName in this.groups) {
+        if (this.groups.hasOwnProperty(groupName)) {
+            this.groups[groupName].children.map(function (myBody) {
+                if (body.id === myBody.id) {
+                    result = true;
+                }
+            });
         }
-    });
+    }
+    return result;
 };
+
+Player.prototype.isMyBullet = function (bulletBody) {
+
+    return this.bulletIds.includes(bulletBody.id);
+};
+
+// Player.prototype.findBulletObjByHead = function (bulletHeadBody) {
+//     this.bullets.map((bulletObj, index) => {
+//         if (bulletObj.head.body === bulletHeadBody) {
+//             return bulletObj;
+//         }
+//     });
+// };
 
 Player.prototype.findBulletIndexByHead = function (bulletHeadBody) {
     if (!this.bullets.length) {
@@ -49795,6 +49825,10 @@ Player.prototype.pushBullet = function (dragX, dragY) {
     this.isHasBullet = false;
 
     this.isSweeping = true;
+
+    if (_main.SETTINGS.BLOOD.ON) {
+        _main2.default.state.getCurrentState().initBlood();
+    }
 
     setTimeout(function () {
 
@@ -49872,7 +49906,7 @@ Player.prototype.setCollisionMask = function (mask) {
 Player.prototype.kill = function () {
     var _this5 = this;
 
-    console.log('destroy ', this.groups);
+    // console.log('destroy ', this.groups);
 
     this.isDead = true;
     this.destroyJointsByName('boxJoints');
